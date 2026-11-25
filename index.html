@@ -67,5 +67,17 @@ item.style.display=matchCategory&&matchSearch?'block':'none';
 });
 }
 </script>
-</body>
+</body><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://tzgtcrrnmmeoqeecioin.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_YpWfFnvy4WDMdeWWGwAHMA_2DtCohLM";
+
+  window.tnSupabase = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  console.log("TN PLAYER conectado ao Supabase!");
+</script>
 </html>
