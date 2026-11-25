@@ -94,7 +94,17 @@ footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
 
 </section>
 
-<footer>TN PLAYER © 2026</footer>
+<div id="loginBox" style="display:none;position:fixed;inset:0;background:#000d;z-index:999;padding:25px;align-items:center;justify-content:center">
+  <div style="background:#17131e;padding:25px;border-radius:15px;width:100%;max-width:350px">
+    <h2 style="margin:0 0 20px">TN PLAYER</h2>
+    <input id="email" type="email" placeholder="Seu e-mail" style="width:100%;padding:13px;margin-bottom:12px">
+    <input id="password" type="password" placeholder="Sua senha" style="width:100%;padding:13px;margin-bottom:15px">
+    <button onclick="loginUser()" style="width:100%;padding:13px;background:#8129d5;color:white;border:0;border-radius:8px">Entrar</button>
+    <button onclick="registerUser()" style="width:100%;padding:13px;margin-top:10px;background:#30233e;color:white;border:0;border-radius:8px">Criar conta</button>
+    <button onclick="closeLogin()" style="width:100%;padding:10px;margin-top:10px;background:transparent;color:white;border:0">Fechar</button>
+    <p id="loginMessage"></p>
+  </div>
+</div>
 
 <!-- Funções de busca e categorias -->
 <script>
@@ -130,7 +140,61 @@ window.tnSupabase = supabase.createClient(
   SUPABASE_KEY
 );
 
-console.log("TN PLAYER conectado ao Supabase!");
+function openLogin() {
+  document.getElementById("loginBox").style.display = "flex";
+}
+
+function closeLogin() {
+  document.getElementById("loginBox").style.display = "none";
+}
+
+async function registerUser() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+
+  if (!email || !password) {
+    message.innerText = "Preencha e-mail e senha.";
+    return;
+  }
+
+  message.innerText = "Criando sua conta...";
+
+  const { data, error } = await window.tnSupabase.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    message.innerText = error.message;
+  } else {
+    message.innerText = "Conta criada! Confira seu e-mail para confirmar o cadastro.";
+  }
+}
+
+async function loginUser() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+
+  if (!email || !password) {
+    message.innerText = "Preencha e-mail e senha.";
+    return;
+  }
+
+  message.innerText = "Entrando...";
+
+  const { data, error } = await window.tnSupabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    message.innerText = error.message;
+  } else {
+    message.innerText = "Login realizado com sucesso!";
+  }
+}
 </script>
 
 </body>
