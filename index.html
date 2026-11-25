@@ -26,6 +26,14 @@ h2{margin:20px 18px 12px;font-size:20px}
 .item h3{font-size:14px;margin:10px}
 .item p{font-size:12px;color:#aaa;margin:0 10px 12px}
 footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
+#loginBox{display:none;position:fixed;inset:0;background:#000d;z-index:999;padding:25px;align-items:center;justify-content:center}
+.login-card{background:#17131e;padding:25px;border-radius:15px;width:100%;max-width:350px}
+.login-card input{width:100%;padding:13px;margin-bottom:12px;border-radius:8px;border:1px solid #40304e;background:#09080e;color:white}
+.login-card button{width:100%;padding:13px;border:0;border-radius:8px;margin-top:8px;color:white}
+.primary{background:#8129d5}
+.secondary{background:#30233e}
+.close{background:transparent}
+#loginMessage{font-size:13px;color:#ddd;line-height:1.5}
 </style>
 </head>
 
@@ -33,7 +41,7 @@ footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
 
 <header>
 <div class="logo">TN <span>PLAYER</span></div>
-<button class="login" onclick="openLogin()">Entrar</button>
+<button class="login" id="authButton" onclick="openLogin()">Entrar</button>
 </header>
 
 <section class="hero">
@@ -55,7 +63,6 @@ footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
 <h2>Em destaque</h2>
 
 <section class="catalog" id="catalog">
-
 <div class="item" data-category="Futebol">
 <div class="poster">⚽</div>
 <h3>Futebol</h3>
@@ -91,22 +98,25 @@ footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
 <h3>Documentários</h3>
 <p>Histórias e descobertas</p>
 </div>
-
 </section>
 
-<div id="loginBox" style="display:none;position:fixed;inset:0;background:#000d;z-index:999;padding:25px;align-items:center;justify-content:center">
-  <div style="background:#17131e;padding:25px;border-radius:15px;width:100%;max-width:350px">
+<footer>TN PLAYER © 2026</footer>
+
+<div id="loginBox">
+  <div class="login-card">
     <h2 style="margin:0 0 20px">TN PLAYER</h2>
-    <input id="email" type="email" placeholder="Seu e-mail" style="width:100%;padding:13px;margin-bottom:12px">
-    <input id="password" type="password" placeholder="Sua senha" style="width:100%;padding:13px;margin-bottom:15px">
-    <button onclick="loginUser()" style="width:100%;padding:13px;background:#8129d5;color:white;border:0;border-radius:8px">Entrar</button>
-    <button onclick="registerUser()" style="width:100%;padding:13px;margin-top:10px;background:#30233e;color:white;border:0;border-radius:8px">Criar conta</button>
-    <button onclick="closeLogin()" style="width:100%;padding:10px;margin-top:10px;background:transparent;color:white;border:0">Fechar</button>
+
+    <input id="email" type="email" placeholder="Seu e-mail">
+    <input id="password" type="password" placeholder="Sua senha">
+
+    <button class="primary" onclick="loginUser()">Entrar</button>
+    <button class="secondary" onclick="registerUser()">Criar conta</button>
+    <button class="close" onclick="closeLogin()">Fechar</button>
+
     <p id="loginMessage"></p>
   </div>
 </div>
 
-<!-- Funções de busca e categorias -->
 <script>
 let category = 'Todos';
 
@@ -121,16 +131,98 @@ function filterItems() {
   document.querySelectorAll('.item').forEach(item => {
     const matchCategory = category === 'Todos' || item.dataset.category === category;
     const matchSearch = item.innerText.toLowerCase().includes(search);
-
     item.style.display = matchCategory && matchSearch ? 'block' : 'none';
   });
 }
+
+function openLogin() {
+  document.getElementById('loginBox').style.display = 'flex';
+}
+
+function closeLogin() {
+  document.getElementById('loginBox').style.display = 'none';
+}
+
+function updateAuthButton(session) {
+  const button = document.getElementById('authButton');
+
+  if (session) {
+    button.innerText = 'Sair';
+    button.onclick = logoutUser;
+  } else {
+    button.innerText = 'Entrar';
+    button.onclick = openLogin;
+  }
+}
+
+async function registerUser() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const message = document.getElementById('loginMessage');
+
+  if (!email || !password) {
+    message.innerText = 'Preencha e-mail e senha.';
+    return;
+  }
+
+  message.innerText = 'Criando sua conta...';
+
+  const { data, error } = await window.tnSupabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    message.innerText = error.message;
+  } else if (data.session) {
+    message.innerText = 'Conta criada com sucesso!';
+    closeLogin();
+    updateAuthButton(data.session);
+  } else {
+    message.innerText = 'Conta criada! Confira seu e-mail para confirmar o cadastro.';
+  }
+}
+
+async function loginUser() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const message = document.getElementById('loginMessage');
+
+  if (!email || !password) {
+    message.innerText = 'Preencha e-mail e senha.';
+    return;
+  }
+
+  message.innerText = 'Entrando...';
+
+  const { data, error } = await window.tnSupabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    message.innerText = error.message;
+  } else {
+    message.innerText = 'Login realizado com sucesso!';
+    updateAuthButton(data.session);
+    closeLogin();
+  }
+}
+
+async function logoutUser() {
+  const { error } = await window.tnSupabase.auth.signOut();
+
+  if (error) {
+    alert('Não foi possível sair: ' + error.message);
+  } else {
+    updateAuthButton(null);
+    alert('Você saiu da sua conta.');
+  }
+}
 </script>
 
-<!-- Biblioteca Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- Conexão Supabase -->
 <script>
 const SUPABASE_URL = "https://tzgtcrrnmmeoqeecioin.supabase.co";
 const SUPABASE_KEY = "sb_publishable_YpWfFnvy4WDMdeWWGwAHMA_2DtCohLM";
@@ -140,63 +232,20 @@ window.tnSupabase = supabase.createClient(
   SUPABASE_KEY
 );
 
-function openLogin() {
-  document.getElementById("loginBox").style.display = "flex";
-}
-
-function closeLogin() {
-  document.getElementById("loginBox").style.display = "none";
-}
-
-async function registerUser() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const message = document.getElementById("loginMessage");
-
-  if (!email || !password) {
-    message.innerText = "Preencha e-mail e senha.";
+window.tnSupabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('Erro ao recuperar sessão:', error.message);
     return;
   }
+  updateAuthButton(data.session);
+});
 
-  message.innerText = "Criando sua conta...";
+window.tnSupabase.auth.onAuthStateChange((event, session) => {
+  updateAuthButton(session);
+});
 
-  const { data, error } = await window.tnSupabase.auth.signUp({
-    email: email,
-    password: password
-  });
-
-  if (error) {
-    message.innerText = error.message;
-  } else {
-    message.innerText = "Conta criada! Confira seu e-mail para confirmar o cadastro.";
-  }
-}
-
-async function loginUser() {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const message = document.getElementById("loginMessage");
-
-  if (!email || !password) {
-    message.innerText = "Preencha e-mail e senha.";
-    return;
-  }
-
-  message.innerText = "Entrando...";
-
-  const { data, error } = await window.tnSupabase.auth.signInWithPassword({
-    email: email,
-    password: password
-  });
-
-  if (error) {
-    message.innerText = error.message;
-  } else {
-    message.innerText = "Login realizado com sucesso!";
-  }
-}
+console.log("TN PLAYER conectado ao Supabase!");
 </script>
 
 </body>
 </html>
-
