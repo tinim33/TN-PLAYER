@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TN PLAYER</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#09080e;color:white;font-family:Arial,sans-serif}
@@ -27,16 +28,21 @@ h2{margin:20px 18px 12px;font-size:20px}
 footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
 </style>
 </head>
+
 <body>
+
 <header>
 <div class="logo">TN <span>PLAYER</span></div>
 <button class="login" onclick="alert('Login será conectado ao Supabase na próxima etapa!')">Entrar</button>
 </header>
+
 <section class="hero">
 <h1>Seu entretenimento em um só lugar</h1>
 <p>Filmes, séries, futebol, esportes e muito mais.</p>
 </section>
+
 <input class="search" id="search" placeholder="Buscar filmes, séries e esportes..." oninput="filterItems()">
+
 <nav class="categories">
 <button onclick="showCategory('Todos')">Todos</button>
 <button onclick="showCategory('Futebol')">Futebol</button>
@@ -45,39 +51,88 @@ footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
 <button onclick="showCategory('Esportes')">Esportes</button>
 <button onclick="showCategory('Infantil')">Infantil</button>
 </nav>
+
 <h2>Em destaque</h2>
+
 <section class="catalog" id="catalog">
-<div class="item" data-category="Futebol"><div class="poster">⚽</div><h3>Futebol</h3><p>Jogos e melhores momentos autorizados</p></div>
-<div class="item" data-category="Filmes"><div class="poster">🎬</div><h3>Filmes</h3><p>Catálogo de filmes</p></div>
-<div class="item" data-category="Séries"><div class="poster">📺</div><h3>Séries</h3><p>Suas séries favoritas</p></div>
-<div class="item" data-category="Esportes"><div class="poster">🏆</div><h3>Esportes</h3><p>Várias modalidades</p></div>
-<div class="item" data-category="Infantil"><div class="poster">🎨</div><h3>Infantil</h3><p>Conteúdo para crianças</p></div>
-<div class="item" data-category="Filmes"><div class="poster">🍿</div><h3>Documentários</h3><p>Histórias e descobertas</p></div>
+
+<div class="item" data-category="Futebol">
+<div class="poster">⚽</div>
+<h3>Futebol</h3>
+<p>Jogos e melhores momentos autorizados</p>
+</div>
+
+<div class="item" data-category="Filmes">
+<div class="poster">🎬</div>
+<h3>Filmes</h3>
+<p>Catálogo de filmes</p>
+</div>
+
+<div class="item" data-category="Séries">
+<div class="poster">📺</div>
+<h3>Séries</h3>
+<p>Suas séries favoritas</p>
+</div>
+
+<div class="item" data-category="Esportes">
+<div class="poster">🏆</div>
+<h3>Esportes</h3>
+<p>Várias modalidades</p>
+</div>
+
+<div class="item" data-category="Infantil">
+<div class="poster">🎨</div>
+<h3>Infantil</h3>
+<p>Conteúdo para crianças</p>
+</div>
+
+<div class="item" data-category="Filmes">
+<div class="poster">🍿</div>
+<h3>Documentários</h3>
+<p>Histórias e descobertas</p>
+</div>
+
 </section>
+
 <footer>TN PLAYER © 2026</footer>
+
+<!-- Funções de busca e categorias -->
 <script>
-let category='Todos';
-function showCategory(value){category=value;filterItems()}
-function filterItems(){
-const search=document.getElementById('search').value.toLowerCase();
-document.querySelectorAll('.item').forEach(item=>{
-const matchCategory=category==='Todos'||item.dataset.category===category;
-const matchSearch=item.innerText.toLowerCase().includes(search);
-item.style.display=matchCategory&&matchSearch?'block':'none';
-});
+let category = 'Todos';
+
+function showCategory(value) {
+  category = value;
+  filterItems();
+}
+
+function filterItems() {
+  const search = document.getElementById('search').value.toLowerCase();
+
+  document.querySelectorAll('.item').forEach(item => {
+    const matchCategory = category === 'Todos' || item.dataset.category === category;
+    const matchSearch = item.innerText.toLowerCase().includes(search);
+
+    item.style.display = matchCategory && matchSearch ? 'block' : 'none';
+  });
 }
 </script>
-</body><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<!-- Biblioteca Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Conexão Supabase -->
 <script>
-  const SUPABASE_URL = "https://tzgtcrrnmmeoqeecioin.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_YpWfFnvy4WDMdeWWGwAHMA_2DtCohLM";
+const SUPABASE_URL = "https://tzgtcrrnmmeoqeecioin.supabase.co";
+const SUPABASE_KEY = "sb_publishable_YpWfFnvy4WDMdeWWGwAHMA_2DtCohLM";
 
-  window.tnSupabase = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-  );
+window.tnSupabase = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
-  console.log("TN PLAYER conectado ao Supabase!");
+console.log("TN PLAYER conectado ao Supabase!");
 </script>
+
+</body>
 </html>
+
