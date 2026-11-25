@@ -1,0 +1,71 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TN PLAYER</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#09080e;color:white;font-family:Arial,sans-serif}
+header{padding:22px 18px;background:#100d19;display:flex;justify-content:space-between;align-items:center}
+.logo{font-size:25px;font-weight:900;color:#a855f7}
+.logo span{color:white}
+.login{background:#8129d5;color:white;padding:10px 15px;border:0;border-radius:9px}
+.hero{padding:35px 20px;background:linear-gradient(90deg,#180b2c,#35105c);min-height:220px}
+.hero h1{font-size:30px;margin:0 0 10px}
+.hero p{color:#ddd;line-height:1.5}
+.search{margin:18px;padding:14px;width:calc(100% - 36px);border-radius:10px;border:1px solid #40304e;background:#17131e;color:white}
+.categories{display:flex;gap:10px;overflow:auto;padding:0 18px 18px}
+.categories button{background:#21182d;color:white;border:1px solid #59327b;padding:11px 16px;border-radius:20px;white-space:nowrap}
+h2{margin:20px 18px 12px;font-size:20px}
+.catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:0 15px 25px}
+.item{background:#17131e;border-radius:12px;overflow:hidden}
+.poster{height:155px;background:linear-gradient(145deg,#34104e,#100d19);display:flex;align-items:center;justify-content:center;font-size:43px}
+.item h3{font-size:14px;margin:10px}
+.item p{font-size:12px;color:#aaa;margin:0 10px 12px}
+footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">TN <span>PLAYER</span></div>
+<button class="login" onclick="alert('Login será conectado ao Supabase na próxima etapa!')">Entrar</button>
+</header>
+<section class="hero">
+<h1>Seu entretenimento em um só lugar</h1>
+<p>Filmes, séries, futebol, esportes e muito mais.</p>
+</section>
+<input class="search" id="search" placeholder="Buscar filmes, séries e esportes..." oninput="filterItems()">
+<nav class="categories">
+<button onclick="showCategory('Todos')">Todos</button>
+<button onclick="showCategory('Futebol')">Futebol</button>
+<button onclick="showCategory('Filmes')">Filmes</button>
+<button onclick="showCategory('Séries')">Séries</button>
+<button onclick="showCategory('Esportes')">Esportes</button>
+<button onclick="showCategory('Infantil')">Infantil</button>
+</nav>
+<h2>Em destaque</h2>
+<section class="catalog" id="catalog">
+<div class="item" data-category="Futebol"><div class="poster">⚽</div><h3>Futebol</h3><p>Jogos e melhores momentos autorizados</p></div>
+<div class="item" data-category="Filmes"><div class="poster">🎬</div><h3>Filmes</h3><p>Catálogo de filmes</p></div>
+<div class="item" data-category="Séries"><div class="poster">📺</div><h3>Séries</h3><p>Suas séries favoritas</p></div>
+<div class="item" data-category="Esportes"><div class="poster">🏆</div><h3>Esportes</h3><p>Várias modalidades</p></div>
+<div class="item" data-category="Infantil"><div class="poster">🎨</div><h3>Infantil</h3><p>Conteúdo para crianças</p></div>
+<div class="item" data-category="Filmes"><div class="poster">🍿</div><h3>Documentários</h3><p>Histórias e descobertas</p></div>
+</section>
+<footer>TN PLAYER © 2026</footer>
+<script>
+let category='Todos';
+function showCategory(value){category=value;filterItems()}
+function filterItems(){
+const search=document.getElementById('search').value.toLowerCase();
+document.querySelectorAll('.item').forEach(item=>{
+const matchCategory=category==='Todos'||item.dataset.category===category;
+const matchSearch=item.innerText.toLowerCase().includes(search);
+item.style.display=matchCategory&&matchSearch?'block':'none';
+});
+}
+</script>
+</body>
+</html>
