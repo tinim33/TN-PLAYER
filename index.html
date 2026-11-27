@@ -1,0 +1,426 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#09080e">
+<title>TN PLAYER</title>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#09080e;color:white;font-family:Arial,sans-serif}
+header{padding:18px;background:#100d19;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:20}
+.logo{font-size:25px;font-weight:900;color:#a855f7}
+.logo span{color:white}
+.login{background:#8129d5;color:white;padding:10px 15px;border:0;border-radius:9px}
+.hero{padding:35px 20px;background:linear-gradient(90deg,#180b2c,#35105c);min-height:210px}
+.hero h1{font-size:29px;margin:0 0 10px}
+.hero p{color:#ddd;line-height:1.5}
+.search{margin:18px;padding:14px;width:calc(100% - 36px);border-radius:10px;border:1px solid #40304e;background:#17131e;color:white;font-size:15px}
+.categories{display:flex;gap:10px;overflow-x:auto;padding:0 18px 18px;scrollbar-width:none}
+.categories button{background:#21182d;color:white;border:1px solid #59327b;padding:11px 16px;border-radius:20px;white-space:nowrap}
+.categories button.active{background:#8129d5;border-color:#a855f7}
+h2{margin:20px 18px 12px;font-size:20px}
+.catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;padding:0 15px 25px}
+.item{background:#17131e;border-radius:12px;overflow:hidden;min-width:0}
+.poster{height:180px;background:linear-gradient(145deg,#34104e,#100d19);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:45px}
+.poster img{width:100%;height:100%;object-fit:cover}
+.item h3{font-size:14px;margin:10px;line-height:1.4}
+.item p{font-size:12px;color:#aaa;margin:0 10px 12px;line-height:1.5}
+.tag{display:inline-block;margin:0 10px 12px;background:#30203e;color:#d9b8ff;padding:5px 8px;border-radius:6px;font-size:10px}
+.empty,.loading,.error{text-align:center;color:#aaa;padding:35px 20px;grid-column:1/-1;line-height:1.6}
+.error{color:#ff9999}
+footer{text-align:center;padding:25px;color:#888;border-top:1px solid #29202f}
+#loginBox{display:none;position:fixed;inset:0;background:#000d;z-index:999;padding:20px;align-items:center;justify-content:center}
+.login-card{background:#17131e;padding:25px;border-radius:15px;width:100%;max-width:350px}
+.login-card input{width:100%;padding:13px;margin-bottom:12px;border-radius:8px;border:1px solid #40304e;background:#09080e;color:white}
+.login-card button{width:100%;padding:13px;border:0;border-radius:8px;margin-top:8px;color:white}
+.primary{background:#8129d5}
+.secondary{background:#30233e}
+.close{background:transparent}
+#loginMessage{font-size:13px;color:#ddd;line-height:1.5}
+@media(min-width:700px){.catalog{grid-template-columns:repeat(4,minmax(0,1fr))}.poster{height:220px}.hero{padding:55px 35px}}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">TN <span>PLAYER</span></div>
+  <button class="login" id="authButton">Entrar</button>
+</header>
+
+<section class="hero">
+  <h1>Seu entretenimento em um só lugar</h1>
+  <p>Filmes, séries, futebol, esportes e muito mais.</p>
+</section>
+
+<input
+  class="search"
+  id="search"
+  type="search"
+  placeholder="Buscar filmes, séries e esportes..."
+  autocomplete="off"
+>
+
+<nav class="categories" id="categories">
+  <button class="active" data-category="Todos">Todos</button>
+</nav>
+
+<h2 id="catalogTitle">Catálogo</h2>
+
+<section class="catalog" id="catalog">
+  <div class="loading">Carregando catálogo...</div>
+</section>
+
+<footer>TN PLAYER © 2026</footer>
+
+<div id="loginBox">
+  <div class="login-card">
+    <h2 style="margin:0 0 20px">TN PLAYER</h2>
+    <input id="email" type="email" placeholder="Seu e-mail" autocomplete="email">
+    <input id="password" type="password" placeholder="Sua senha" autocomplete="current-password">
+    <button class="primary" id="loginAction">Entrar</button>
+    <button class="secondary" id="registerAction">Criar conta</button>
+    <button class="close" id="closeLogin">Fechar</button>
+    <p id="loginMessage"></p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://tzgtcrrnmmeoqeecioin.supabase.co";
+const SUPABASE_KEY = "sb_publishable_YpWfFnvy4WDMdeWWGwAHMA_2DtCohLM";
+
+const tnSupabase = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let selectedCategory = "Todos";
+let allContents = [];
+let searchTimer = null;
+
+const catalog = document.getElementById("catalog");
+const categoriesElement = document.getElementById("categories");
+const searchInput = document.getElementById("search");
+const catalogTitle = document.getElementById("catalogTitle");
+const loginBox = document.getElementById("loginBox");
+const loginMessage = document.getElementById("loginMessage");
+
+const icons = {
+  "Filmes":"🎬",
+  "Séries":"📺",
+  "Futebol":"⚽",
+  "Esportes":"🏆",
+  "Documentários":"🎥",
+  "Animes":"✨",
+  "Desenhos":"🎨",
+  "Infantil":"🧸",
+  "Notícias":"📰",
+  "Shows e Música":"🎵"
+};
+
+function showMessage(message, type="empty") {
+  catalog.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = type;
+  div.textContent = message;
+  catalog.appendChild(div);
+}
+
+async function loadCategories() {
+  const {data,error} = await tnSupabase
+    .from("categories")
+    .select("id,name")
+    .order("name");
+
+  if(error) {
+    console.error("Erro nas categorias:",error.message);
+    return;
+  }
+
+  categoriesElement.innerHTML = "";
+
+  addCategoryButton("Todos");
+
+  (data || []).forEach(category => {
+    addCategoryButton(category.name);
+  });
+}
+
+function addCategoryButton(name) {
+  const button = document.createElement("button");
+  button.textContent = (icons[name] || "📁") + " " + name;
+  button.dataset.category = name;
+
+  if(name === selectedCategory) {
+    button.classList.add("active");
+  }
+
+  button.addEventListener("click",() => {
+    selectedCategory = name;
+
+    document.querySelectorAll(".categories button").forEach(item => {
+      item.classList.toggle(
+        "active",
+        item.dataset.category === name
+      );
+    });
+
+    filterContents();
+  });
+
+  categoriesElement.appendChild(button);
+}
+
+async function loadContents() {
+  showMessage("Carregando conteúdos...","loading");
+
+  const term = searchInput.value.trim();
+
+  let result;
+
+  if(term.length > 0) {
+    result = await tnSupabase.rpc("search_contents", {
+      search_term: term
+    });
+  } else {
+    result = await tnSupabase
+      .from("public_contents")
+      .select(`
+        id,
+        title,
+        description,
+        category,
+        image_url,
+        is_free,
+        content_type,
+        release_year,
+        duration_minutes,
+        age_rating,
+        featured,
+        season_number,
+        episode_number,
+        series_id
+      `)
+      .order("featured",{ascending:false})
+      .order("title");
+  }
+
+  if(result.error) {
+    console.error("Erro ao carregar conteúdos:",result.error.message);
+    showMessage("Não foi possível carregar o catálogo. Tente novamente.","error");
+    return;
+  }
+
+  allContents = result.data || [];
+  filterContents();
+}
+
+function filterContents() {
+  const term = searchInput.value.trim().toLowerCase();
+
+  const filtered = allContents.filter(item => {
+    const categoryMatch =
+      selectedCategory === "Todos" ||
+      item.category === selectedCategory;
+
+    const searchMatch =
+      !term ||
+      (item.title || "").toLowerCase().includes(term) ||
+      (item.description || "").toLowerCase().includes(term);
+
+    return categoryMatch && searchMatch;
+  });
+
+  renderContents(filtered);
+}
+
+function renderContents(contents) {
+  catalog.innerHTML = "";
+
+  if(contents.length === 0) {
+    showMessage(
+      "Ainda não temos conteúdos nesta seção. Novidades serão adicionadas em breve."
+    );
+    return;
+  }
+
+  contents.forEach(item => {
+    const card = document.createElement("article");
+    card.className = "item";
+
+    const poster = document.createElement("div");
+    poster.className = "poster";
+
+    if(item.image_url) {
+      const image = document.createElement("img");
+      image.src = item.image_url;
+      image.alt = item.title || "Capa do conteúdo";
+      image.loading = "lazy";
+      image.onerror = () => {
+        poster.innerHTML = "";
+        poster.textContent = icons[item.category] || "🎬";
+      };
+      poster.appendChild(image);
+    } else {
+      poster.textContent = icons[item.category] || "🎬";
+    }
+
+    const title = document.createElement("h3");
+    title.textContent = item.title || "Sem título";
+
+    const description = document.createElement("p");
+    description.textContent = item.description || "Confira este conteúdo no TN PLAYER.";
+
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = item.is_free ? "GRATUITO" : "ASSINANTES";
+
+    card.appendChild(poster);
+    card.appendChild(title);
+    card.appendChild(description);
+    card.appendChild(tag);
+
+    catalog.appendChild(card);
+  });
+}
+
+searchInput.addEventListener("input",() => {
+  clearTimeout(searchTimer);
+
+  searchTimer = setTimeout(() => {
+    loadContents();
+  },400);
+});
+
+function openLogin() {
+  loginBox.style.display = "flex";
+}
+
+function closeLogin() {
+  loginBox.style.display = "none";
+  loginMessage.textContent = "";
+}
+
+document.getElementById("authButton").addEventListener("click",async () => {
+  const {data} = await tnSupabase.auth.getSession();
+
+  if(data.session) {
+    await logoutUser();
+  } else {
+    openLogin();
+  }
+});
+
+document.getElementById("closeLogin").addEventListener("click",closeLogin);
+
+function updateAuthButton(session) {
+  document.getElementById("authButton").textContent =
+    session ? "Sair" : "Entrar";
+}
+
+async function registerUser() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password) {
+    loginMessage.textContent = "Preencha e-mail e senha.";
+    return;
+  }
+
+  if(password.length < 6) {
+    loginMessage.textContent = "A senha precisa ter pelo menos 6 caracteres.";
+    return;
+  }
+
+  loginMessage.textContent = "Criando sua conta...";
+
+  const {data,error} = await tnSupabase.auth.signUp({
+    email,
+    password
+  });
+
+  if(error) {
+    loginMessage.textContent = error.message;
+    return;
+  }
+
+  if(data.session) {
+    loginMessage.textContent = "Conta criada com sucesso!";
+    closeLogin();
+    updateAuthButton(data.session);
+  } else {
+    loginMessage.textContent =
+      "Conta criada! Confira seu e-mail para confirmar o cadastro.";
+  }
+}
+
+async function loginUser() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password) {
+    loginMessage.textContent = "Preencha e-mail e senha.";
+    return;
+  }
+
+  loginMessage.textContent = "Entrando...";
+
+  const {data,error} = await tnSupabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error) {
+    loginMessage.textContent = error.message;
+    return;
+  }
+
+  updateAuthButton(data.session);
+  closeLogin();
+
+  await loadContents();
+}
+
+async function logoutUser() {
+  const {error} = await tnSupabase.auth.signOut();
+
+  if(error) {
+    alert("Não foi possível sair: " + error.message);
+    return;
+  }
+
+  updateAuthButton(null);
+  await loadContents();
+}
+
+document.getElementById("loginAction").addEventListener("click",loginUser);
+document.getElementById("registerAction").addEventListener("click",registerUser);
+
+tnSupabase.auth.onAuthStateChange((event,session) => {
+  updateAuthButton(session);
+
+  if(event === "SIGNED_IN" || event === "SIGNED_OUT") {
+    loadContents();
+  }
+});
+
+async function initializeApp() {
+  await loadCategories();
+  await loadContents();
+
+  const {data} = await tnSupabase.auth.getSession();
+  updateAuthButton(data.session);
+
+  console.log("TN PLAYER conectado ao Supabase.");
+}
+
+initializeApp();
+</script>
+
+</body>
+</html>
